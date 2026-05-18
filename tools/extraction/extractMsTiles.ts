@@ -3,10 +3,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import sharp from "sharp";
 import bmp from "bmp-js";
-import { bmpJsDataToRgba } from "../src/dat/bmpJsToRgba.js";
+import { bmpJsDataToRgba } from "../../pipeline/bmpJsToRgba.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..");
+const ROOT = path.join(__dirname, "..", "..");
 const VENDOR = path.join(ROOT, "vendor", "chips-challenge-ms");
 const EXE = path.join(VENDOR, "CHIPS.EXE");
 const OUT_DIR = path.join(VENDOR, "generated");

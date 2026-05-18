@@ -1,24 +1,15 @@
 {
-  "name": "chips-challenge-100",
+  "name": "cc1-asset-extraction-pipeline",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "node scripts/predev.mjs && vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "vendor:ensure": "node scripts/ensureVendor.mjs",
-    "ms:extract": "tsx scripts/extractMsTiles.ts",
-    "dat-to-json": "tsx src/dat/cli.ts",
-    "dat:level1": "tsx src/dat/cli.ts vendor/chips-challenge-ms/CHIPS.DAT public/games/chips-challenge-100/levels/level-001.json --level 1",
-    "dat:all": "tsx src/dat/cli.ts vendor/chips-challenge-ms/CHIPS.DAT output/CHIPS.json",
-    "prebuild": "node scripts/predev.mjs",
-    "data:original-levels": "node scripts/buildOriginalLevelReference.mjs"
-  },
-  "dependencies": {
-    "phaser": "^3.80.1"
+    "vendor:ensure": "node tools/extraction/ensureVendor.mjs",
+    "ms:extract": "tsx tools/extraction/extractMsTiles.ts",
+    "ms:digits": "tsx tools/extraction/extractMsDigits.ts",
+    "dat-to-json": "tsx pipeline/cli.ts",
+    "data:original-levels": "node tools/extraction/buildOriginalLevelReference.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
@@ -27,7 +18,6 @@
     "sharp": "^0.34.5",
     "tsx": "^4.16.2",
     "typescript": "~5.4.5",
-    "vite": "^5.4.10",
     "vitest": "^2.0.5"
   }
 }

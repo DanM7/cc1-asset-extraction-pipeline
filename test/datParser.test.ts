@@ -1,10 +1,10 @@
 import { readFileSync, existsSync } from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { buildSyntheticDat, parseDat } from "../src/dat/datParser.js";
-import { decodePassword } from "../src/dat/metadata.js";
-import { validateChipDatFile } from "../src/dat/validate.js";
-import { findChipStart } from "../src/dat/chipToGameLevel.js";
+import { buildSyntheticDat, parseDat } from "../pipeline/datParser.js";
+import { decodePassword } from "../pipeline/metadata.js";
+import { validateChipDatFile } from "../pipeline/validate.js";
+import { findChipStart } from "../pipeline/chipToGameLevel.js";
 
 describe("parseDat (synthetic)", () => {
   it("parses header and one empty level with metadata", () => {

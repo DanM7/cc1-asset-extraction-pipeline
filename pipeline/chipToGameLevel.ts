@@ -1,5 +1,5 @@
-import type { LevelData } from "../engine/types.js";
-import { countCollectiblesOnMap } from "../engine/countCollectibles.js";
+import { countCollectiblesOnMap } from "./countCollectibles.js";
+import type { LevelData } from "./gameLevelTypes.js";
 import { BLOCKING_TILE_IDS, CHIP_TILE_IDS, CC1_MAP_SIZE } from "./tiles.js";
 import { MS_TILE_SIZE } from "./msTileIndex.js";
 import type { ChipLevel } from "./types.js";
