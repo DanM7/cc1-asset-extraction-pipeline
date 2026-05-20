@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "exports": {
+    "./pipeline/*": "./pipeline/*"
+  },
   "scripts": {
     "test": "vitest run",
     "vendor:ensure": "node tools/extraction/ensureVendor.mjs",
