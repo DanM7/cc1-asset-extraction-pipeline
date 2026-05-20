@@ -11,8 +11,8 @@ function usage(): never {
   dat-to-json <input.dat> --extract <outputDir>   (writes level-NNN.json per level)
 
 Examples:
-  npm run dat-to-json -- data/CCLP.dat output/CCLP.json
-  npm run dat-to-json -- data/CCLP.dat public/games/chips-challenge-100/levels/level-001.json --level 1`);
+  npm run dat-to-json -- vendor/chips-challenge-ms/CHIPS.DAT ../chips-challenge-web/apps/chips-challenge-web/public/games/chips-challenge-1/levels/level-001.json --level 1
+  npm run dat-to-json -- data/sample.dat --extract /path/to/game-pack/levels`);
   process.exit(1);
 }
 

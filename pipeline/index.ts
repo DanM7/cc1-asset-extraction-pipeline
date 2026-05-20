@@ -1,3 +1,4 @@
+export type { LevelData } from "@engine/types.js";
 export type { ChipDatFile, ChipLevel, MonsterDirection } from "./types.js";
 export { parseDat, parseLevel, buildSyntheticDat, emptyLayerCompressed } from "./datParser.js";
 export type { ParseLevelResult, SyntheticLevelSpec } from "./datParser.js";

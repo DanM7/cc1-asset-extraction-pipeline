@@ -1,18 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { resolveGamePackRoot } from "../gamePackOut.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const tsvPath = path.join(__dirname, "chips-original-levels.tsv");
-const outPath = path.join(
-  __dirname,
-  "..",
-  "public",
-  "games",
-  "chips-challenge-100",
-  "data",
-  "original-level-reference.json",
-);
+const outPath = path.join(resolveGamePackRoot(), "data", "original-level-reference.json");
 
 const raw = fs.readFileSync(tsvPath, "utf8");
 const lines = raw.trim().split(/\r?\n/);

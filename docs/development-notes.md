@@ -19,7 +19,7 @@ This document records problems encountered while building the Phaser/TypeScript 
 - `vendor/chips-challenge-ms/` is gitignored and holds `CHIPS.DAT`, `CHIPS.EXE`, audio, and generated output.
 - `npm run vendor:ensure` unpacks `chips_challenge.zip` when present.
 - `npm run ms:extract` builds `vendor/chips-challenge-ms/generated/tiles.png`.
-- `npm run dat:level1` (or `dat-to-json`) exports levels to `public/games/chips-challenge-100/levels/`.
+- `npm run dat:level1` (or `dat-to-json`) exports levels to `public/games/chips-challenge-1/levels/`.
 - Vite serves `/ms-assets/` and `/ms-audio/` from `vendor/` in dev and copies them on build.
 
 ---

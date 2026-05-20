@@ -1,5 +1,8 @@
 node_modules
 dist
+
+# Windows: accidental file when shell output is redirected to `NUL` in-repo
+NUL
 *.local
 .DS_Store
 
@@ -10,3 +13,6 @@ _zip_preview/
 
 # Generated from proprietary assets (reproducible via npm run ms:extract)
 output/
+
+# Game pack output must live in chips-challenge-web (see tools/gamePackOut.mjs)
+public/

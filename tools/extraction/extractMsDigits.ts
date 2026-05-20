@@ -1,39 +1,35 @@
 /**
- * Extract tight 7-segment digit PNGs from spritesheet_window.png.
- * Run: npx tsx scripts/extractMsDigits.ts
+ * Extract tight 7-segment digit PNGs (green + yellow rows) from spritesheet_window.png.
+ * Run from cc1-asset-extraction-pipeline: npm run ms:digits
  */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import sharp from "sharp";
 
+import { resolveGamePackRoot } from "../gamePackOut.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..");
-const SHEET = path.join(
-  ROOT,
-  "public/games/chips-challenge-100/sprites/spritesheet_window.png",
-);
-const OUT_DIR = path.join(ROOT, "public/games/chips-challenge-100/sprites/digits");
+const GAME_PACK = resolveGamePackRoot();
+const SHEET = path.join(GAME_PACK, "sprites/spritesheet_window.png");
+const OUT_DIR = path.join(GAME_PACK, "sprites/digits");
 const OUT_JSON = path.join(OUT_DIR, "digits.json");
 
 const STRIP_LEFT = 12;
-const STRIP_TOP = 375;
 const STRIP_W = 195;
 const STRIP_H = 22;
+/** Green row (top of the pair in the rip). */
+const STRIP_TOP_GREEN = 353;
+/** Yellow row (bottom); chips-left zero state. */
+const STRIP_TOP_YELLOW = 374;
 const CHARS = "0123456789-";
 
-function isLit(r: number, g: number, b: number): boolean {
-  return g > 200 && g > 150 && b < 90;
-}
+type LitFn = (r: number, g: number, b: number) => boolean;
 
-async function main(): Promise<void> {
-  const { data, info } = await sharp(SHEET)
-    .extract({ left: STRIP_LEFT, top: STRIP_TOP, width: STRIP_W, height: STRIP_H })
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+const isGreenLit: LitFn = (r, g, b) => g > 200 && g > r + 30 && b < 90;
+const isYellowLit: LitFn = (r, g, b) => r > 200 && g > 180 && b < 90 && r >= g - 20;
 
-  const w = info.width;
-  const h = info.height;
+function findGaps(data: Buffer, w: number, h: number, isLit: LitFn): Array<[number, number]> {
   const colSum = new Array<number>(w).fill(0);
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
@@ -60,8 +56,32 @@ async function main(): Promise<void> {
   if (inside) {
     gaps.push([start, w - 1]);
   }
+  return gaps;
+}
 
-  fs.mkdirSync(OUT_DIR, { recursive: true });
+async function extractRow(
+  stripTop: number,
+  isLit: LitFn,
+  outSubdir: string,
+  gapColumns?: Array<[number, number]>,
+): Promise<Record<string, { file: string; x: number; y: number; width: number; height: number; slotWidth: number }>> {
+  const { data, info } = await sharp(SHEET)
+    .extract({ left: STRIP_LEFT, top: stripTop, width: STRIP_W, height: STRIP_H })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const w = info.width;
+  const h = info.height;
+  const gaps = gapColumns ?? findGaps(data, w, h, isLit);
+  if (gaps.length < 11) {
+    throw new Error(
+      `Expected 11 digit columns at strip top ${stripTop}, found ${gaps.length} in ${outSubdir}`,
+    );
+  }
+
+  const paletteDir = path.join(OUT_DIR, outSubdir);
+  fs.mkdirSync(paletteDir, { recursive: true });
+
   const manifest: Record<
     string,
     { file: string; x: number; y: number; width: number; height: number; slotWidth: number }
@@ -76,8 +96,8 @@ async function main(): Promise<void> {
     let maxY = 0;
     for (let y = 0; y < h; y++) {
       for (let x = x0; x <= x1; x++) {
-        const i = (y * w + x) * 3;
-        if (!isLit(data[i]!, data[i + 1]!, data[i + 2]!)) continue;
+        const idx = (y * w + x) * 3;
+        if (!isLit(data[idx]!, data[idx + 1]!, data[idx + 2]!)) continue;
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;
@@ -86,7 +106,7 @@ async function main(): Promise<void> {
     }
 
     const cropX = STRIP_LEFT + minX;
-    const cropY = STRIP_TOP + minY;
+    const cropY = stripTop + minY;
     const cropW = maxX - minX + 1;
     const cropH = maxY - minY + 1;
     const fileName = ch === "-" ? "dash.png" : `${ch}.png`;
@@ -94,7 +114,7 @@ async function main(): Promise<void> {
     await sharp(SHEET)
       .extract({ left: cropX, top: cropY, width: cropW, height: cropH })
       .png()
-      .toFile(path.join(OUT_DIR, fileName));
+      .toFile(path.join(paletteDir, fileName));
 
     manifest[ch] = {
       file: fileName,
@@ -106,22 +126,48 @@ async function main(): Promise<void> {
     };
   }
 
+  return manifest;
+}
+
+async function main(): Promise<void> {
+  const greenStrip = await sharp(SHEET)
+    .extract({ left: STRIP_LEFT, top: STRIP_TOP_GREEN, width: STRIP_W, height: STRIP_H })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const greenGaps = findGaps(
+    greenStrip.data,
+    greenStrip.info.width,
+    greenStrip.info.height,
+    isGreenLit,
+  );
+
+  const green = await extractRow(STRIP_TOP_GREEN, isGreenLit, "green", greenGaps);
+  const yellow = await extractRow(STRIP_TOP_YELLOW, isYellowLit, "yellow", greenGaps);
+
   fs.writeFileSync(
     OUT_JSON,
     JSON.stringify(
       {
         source: "spritesheet_window.png",
-        strip: { left: STRIP_LEFT, top: STRIP_TOP, width: STRIP_W, height: STRIP_H },
         cellWidth: 14,
         chars: CHARS,
-        glyphs: manifest,
+        palettes: {
+          green: {
+            strip: { left: STRIP_LEFT, top: STRIP_TOP_GREEN, width: STRIP_W, height: STRIP_H },
+            glyphs: green,
+          },
+          yellow: {
+            strip: { left: STRIP_LEFT, top: STRIP_TOP_YELLOW, width: STRIP_W, height: STRIP_H },
+            glyphs: yellow,
+          },
+        },
       },
       null,
       2,
     ),
   );
 
-  console.log(`Wrote ${Object.keys(manifest).length} digits to ${OUT_DIR}`);
+  console.log(`Wrote green (y=${STRIP_TOP_GREEN}) + yellow (y=${STRIP_TOP_YELLOW}) digits to ${OUT_DIR}`);
 }
 
 main().catch((err) => {

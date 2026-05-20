@@ -7,7 +7,11 @@
     "skipLibCheck": true,
     "noEmit": true,
     "lib": ["ES2022"],
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@engine/*": ["../2d-tile-engine/engine/*"],
+      "@tile-engine/*": ["../2d-tile-engine/tile-engine/*"]
+    }
   },
   "include": ["pipeline/**/*.ts", "tools/extraction/**/*.ts", "test/**/*.ts"]
 }

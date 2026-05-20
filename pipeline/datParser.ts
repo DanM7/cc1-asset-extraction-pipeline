@@ -44,7 +44,7 @@ export function parseLevel(reader: BinaryReader, width = CC1_MAP_SIZE, height = 
   const optionalByteLength = reader.readUInt16LE();
   const optionalData = optionalByteLength > 0 ? reader.readBytes(optionalByteLength) : Buffer.alloc(0);
 
-  const { metadata, monsters } = parseOptionalFields(optionalData, upper, width);
+  const { metadata, monsters, trapLinks, cloneLinks } = parseOptionalFields(optionalData, upper, width);
 
   if (reader.position !== levelEnd) {
     console.warn(
@@ -60,6 +60,8 @@ export function parseLevel(reader: BinaryReader, width = CC1_MAP_SIZE, height = 
     size: { width, height },
     layers: { lower, upper },
     monsters,
+    trapLinks,
+    cloneLinks,
     metadata,
   };
 

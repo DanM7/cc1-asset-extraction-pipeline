@@ -6,10 +6,26 @@ import bmp from "bmp-js";
 import { bmpJsDataToRgba } from "../../pipeline/bmpJsToRgba.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(__dirname, "..", "..");
-const VENDOR = path.join(ROOT, "vendor", "chips-challenge-ms");
-const EXE = path.join(VENDOR, "CHIPS.EXE");
-const OUT_DIR = path.join(VENDOR, "generated");
+const ROOT = process.env.CC1_PROJECT_ROOT
+  ? path.resolve(process.env.CC1_PROJECT_ROOT)
+  : path.join(__dirname, "..", "..");
+const INSTALL = process.env.CC1_MS_INSTALL
+  ? path.resolve(process.env.CC1_MS_INSTALL)
+  : path.join(ROOT, "vendor", "chips-challenge-ms");
+const OUT_DIR = path.join(ROOT, "vendor", "chips-challenge-ms", "generated");
+
+function findFile(dir: string, name: string): string | null {
+  if (!fs.existsSync(dir)) return null;
+  const want = name.toLowerCase();
+  for (const ent of fs.readdirSync(dir)) {
+    if (ent.toLowerCase() === want) return path.join(dir, ent);
+  }
+  return null;
+}
+
+const EXE = process.env.CC1_CHIPS_EXE
+  ? path.resolve(process.env.CC1_CHIPS_EXE)
+  : (findFile(INSTALL, "CHIPS.EXE") ?? path.join(INSTALL, "CHIPS.EXE"));
 
 const BITMAP_OFFSET = 0xd800;
 const RLE_SCAN_START = 0xd868;

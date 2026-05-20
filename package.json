@@ -11,6 +11,9 @@
     "dat-to-json": "tsx pipeline/cli.ts",
     "data:original-levels": "node tools/extraction/buildOriginalLevelReference.mjs"
   },
+  "dependencies": {
+    "@danm7/2d-tile-engine": "file:../2d-tile-engine"
+  },
   "devDependencies": {
     "@types/node": "^20.14.10",
     "bmp-js": "^0.1.0",

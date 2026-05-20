@@ -1,4 +1,4 @@
-import type { ChipLevel, MonsterDirection } from "./types.js";
+import type { ChipLevel, CloneButtonLink, MonsterDirection, TrapButtonLink } from "./types.js";
 
 const PASSWORD_XOR = 0x99;
 
@@ -40,9 +40,11 @@ export function parseOptionalFields(
   data: Buffer,
   upperTileIds: string[],
   width: number,
-): Pick<ChipLevel, "metadata" | "monsters"> {
+): Pick<ChipLevel, "metadata" | "monsters" | "trapLinks" | "cloneLinks"> {
   const metadata: ChipLevel["metadata"] = {};
   const monsters: ChipLevel["monsters"] = [];
+  const trapLinks: TrapButtonLink[] = [];
+  const cloneLinks: CloneButtonLink[] = [];
   let offset = 0;
 
   while (offset < data.length) {
@@ -86,13 +88,30 @@ export function parseOptionalFields(
         }
         break;
       case FIELD_TRAP_BUTTONS:
+        for (let i = 0; i + 9 < fieldData.length; i += 10) {
+          trapLinks.push({
+            button: { x: fieldData.readUInt16LE(i), y: fieldData.readUInt16LE(i + 2) },
+            trap: { x: fieldData.readUInt16LE(i + 4), y: fieldData.readUInt16LE(i + 6) },
+          });
+        }
+        break;
       case FIELD_CLONE_BUTTONS:
-        // Stored for future simulation; skip for now.
+        for (let i = 0; i + 7 < fieldData.length; i += 8) {
+          cloneLinks.push({
+            button: { x: fieldData.readUInt16LE(i), y: fieldData.readUInt16LE(i + 2) },
+            clone: { x: fieldData.readUInt16LE(i + 4), y: fieldData.readUInt16LE(i + 6) },
+          });
+        }
         break;
       default:
         break;
     }
   }
 
-  return { metadata, monsters };
+  return {
+    metadata,
+    monsters,
+    trapLinks: trapLinks.length > 0 ? trapLinks : undefined,
+    cloneLinks: cloneLinks.length > 0 ? cloneLinks : undefined,
+  };
 }

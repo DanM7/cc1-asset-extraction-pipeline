@@ -1,7 +1,8 @@
-import { countCollectiblesOnMap } from "./countCollectibles.js";
-import type { LevelData } from "./gameLevelTypes.js";
-import { BLOCKING_TILE_IDS, CHIP_TILE_IDS, CC1_MAP_SIZE } from "./tiles.js";
-import { MS_TILE_SIZE } from "./msTileIndex.js";
+import { countCollectiblesOnMap } from "@engine/countCollectibles.js";
+import { compactLayer } from "@engine/levelLayers.js";
+import type { LevelData } from "@engine/types.js";
+import { CHIP_TILE_IDS, CC1_MAP_SIZE } from "@tile-engine/tiles.js";
+import { MS_TILE_SIZE } from "@tile-engine/msTileIndex.js";
 import type { ChipLevel } from "./types.js";
 
 export function findChipStart(level: ChipLevel): { x: number; y: number } | null {
@@ -21,16 +22,16 @@ export function findChipStart(level: ChipLevel): { x: number; y: number } | null
   return null;
 }
 
-export function isBlockingTile(tileId: string): boolean {
-  return BLOCKING_TILE_IDS.has(tileId);
-}
-
-/** Convert parsed DAT level into runtime JSON for the Phaser client. */
+/** Convert parsed DAT level into game JSON (compact layers, engine-owned schema). */
 export function chipLevelToGameLevel(chip: ChipLevel, id?: string): LevelData {
   const start = findChipStart(chip);
-  const level: LevelData = {
-    id: id ?? `level-${String(chip.levelNumber).padStart(3, "0")}`,
+  const levelId = id ?? `level-${String(chip.levelNumber).padStart(3, "0")}`;
+
+  const hudSource: LevelData = {
+    id: levelId,
     name: chip.metadata.title ?? `Level ${chip.levelNumber}`,
+    ruleset: "grid-arcade-v1",
+    contentPack: "ms-cc1",
     width: chip.size.width,
     height: chip.size.height,
     tileSize: MS_TILE_SIZE,
@@ -41,11 +42,20 @@ export function chipLevelToGameLevel(chip: ChipLevel, id?: string): LevelData {
       upper: chip.layers.upper,
     },
     monsters: chip.monsters,
+    trapLinks: chip.trapLinks,
+    cloneLinks: chip.cloneLinks,
     playerStart: start ?? { x: Math.floor(CC1_MAP_SIZE / 2), y: Math.floor(CC1_MAP_SIZE / 2) },
     metadata: chip.metadata,
   };
-  level.hud = buildLevelHud(chip, countCollectiblesOnMap(level));
-  return level;
+
+  return {
+    ...hudSource,
+    hud: buildLevelHud(chip, countCollectiblesOnMap(hudSource)),
+    layers: {
+      lower: compactLayer(chip.layers.lower),
+      upper: compactLayer(chip.layers.upper),
+    },
+  };
 }
 
 function buildLevelHud(chip: ChipLevel, collectiblesOnMap: number): LevelData["hud"] {
@@ -63,18 +73,7 @@ function buildLevelHud(chip: ChipLevel, collectiblesOnMap: number): LevelData["h
         : { mode: "none", initialSeconds: 0 },
     chipCounter: {
       mode: "remaining",
-      initial: collectiblesOnMap,
-      required,
+      initial: required,
     },
-    inventorySlots: [
-      "key_blue",
-      "key_red",
-      "key_green",
-      "key_yellow",
-      "flippers",
-      "fire_boots",
-      "ice_skates",
-      "suction_boots",
-    ],
   };
 }
